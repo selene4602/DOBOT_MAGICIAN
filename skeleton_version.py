@@ -100,6 +100,7 @@ def procesar_imagen(img_color, w=200, h=200):
     blur = cv2.bilateralFilter(gray, 7, 50, 50)
     cv2.imshow("Grises + bilateral", blur)
     cv2.imwrite("debug_4_grises_bilateral.jpg", blur)
+    
     edges = cv2.Canny(blur, 30, 120)
     cv2.imshow("Canny", edges)
     cv2.imwrite("debug_5_canny.jpg", edges)
@@ -111,7 +112,7 @@ def procesar_imagen(img_color, w=200, h=200):
     #LANDMARKS   
 
     canvas = np.ones((h, w, 3), np.uint8) * 255
-    contours = cv2.findContours(skeleton, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+    contours = cv2.findContours(skeleton, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)[0]
     for c in contours:
         if cv2.contourArea(c) < 30: continue
         poly = cv2.approxPolyDP(c, 2, True)
@@ -179,3 +180,4 @@ if __name__ == "__main__":
     mostrar_preview(canvas)
     robot = conectar_dobot()
     dibujar_con_dobot(robot, skeleton)
+
