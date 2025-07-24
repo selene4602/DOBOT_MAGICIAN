@@ -82,33 +82,28 @@ def procesar_imagen(img_color, w=200, h=200):
     #img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    cv2.imshow("Imagen rotada y redimensionada", img)
-    cv2.imwrite("debug_1_redimensionada.jpg", img)
-
     selfie_seg = mp_selfie.SelfieSegmentation(model_selection=1)
     seg_res = selfie_seg.process(rgb)
     mask_person = (seg_res.segmentation_mask > 0.5).astype(np.uint8)
     kernel = np.ones((5, 5), np.uint8)
     mask_person = cv2.morphologyEx(mask_person, cv2.MORPH_CLOSE, kernel, iterations=2)
     mask_person = cv2.morphologyEx(mask_person, cv2.MORPH_OPEN, kernel, iterations=1)
-    cv2.imshow("Mascara de persona", mask_person * 255)
-    cv2.imwrite("debug_2_mascara_persona.jpg", mask_person * 255)
     img_clean = cv2.bitwise_and(img, img, mask=mask_person)
-    cv2.imshow("Imagen sin fondo", img_clean)
-    cv2.imwrite("debug_3_img_sin_fondo.jpg", img_clean)
     gray = cv2.cvtColor(img_clean, cv2.COLOR_BGR2GRAY)
     blur = cv2.bilateralFilter(gray, 7, 50, 50)
-    cv2.imshow("Grises + bilateral", blur)
-    cv2.imwrite("debug_4_grises_bilateral.jpg", blur)
-    
     edges = cv2.Canny(blur, 30, 120)
-    cv2.imshow("Canny", edges)
-    cv2.imwrite("debug_5_canny.jpg", edges)
     skeleton = thinning(edges)
     skeleton = cv2.dilate(skeleton, np.ones((2, 2), np.uint8), iterations=1)
-    cv2.imshow("Skeleton dilatado", skeleton)
-    cv2.imwrite("debug_6_skeleton_dilatado.jpg", skeleton)
-
+    
+    cv2.imshow("Original", img)
+    cv2.imshow("Mask Person", mask_person * 255)
+    cv2.imshow("Cleaned Image", img_clean)
+    cv2.imshow("Grayscale", blur)
+    cv2.imshow("Canny Edges", edges)
+    cv2.imshow("Skeleton", skeleton)
+    #cv2.imshow("Paso 7 - Canvas Final", canvas)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     #LANDMARKS   
 
     canvas = np.ones((h, w, 3), np.uint8) * 255
@@ -160,7 +155,7 @@ def draw_polyline(api, points):
 def dibujar_con_dobot(api, skeleton):
     regiones = []
     for c in cv2.findContours(skeleton, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]:
-        if cv2.contourArea(c) < 30: continue
+        if cv2.contourArea(c) < 10: continue
         regiones.append([tuple(p[0]) for p in cv2.approxPolyDP(c, 2, True)])
 
     for poly in regiones:
@@ -174,10 +169,9 @@ def dibujar_con_dobot(api, skeleton):
 # === EJECUCIÓN ===
 
 if __name__ == "__main__":
-    ruta_imagen = "person3.jpg"
+    ruta_imagen = "person5.jpg"
     imagen = cargar_imagen_desde_archivo(ruta_imagen)
     canvas, skeleton = procesar_imagen(imagen)
     mostrar_preview(canvas)
     robot = conectar_dobot()
     dibujar_con_dobot(robot, skeleton)
-
