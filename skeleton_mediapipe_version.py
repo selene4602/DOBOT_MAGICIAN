@@ -209,14 +209,8 @@ def draw_polyline(api, points):
     dType.SetPTPCmdEx(api, dType.PTPMode.PTPMOVJXYZMode, points[-1][0], points[-1][1], z_up, 0, 1)
     time.sleep(sleep_draw)
 
-def dibujar_con_dobot(api, hair_skel, beard_skel, feature_groups, pts):
+def dibujar_con_dobot(api, skeleton, feature_groups, pts):
     regiones = []
-
-    for mask in [hair_skel, beard_skel]:
-        for c in cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]:
-            if cv2.contourArea(c) < 30: continue
-            regiones.append([tuple(p[0]) for p in cv2.approxPolyDP(c, 2, True)])
-
     for grp in feature_groups:
             seq = []  # mod at 136
     for s, e in grp:
@@ -241,3 +235,4 @@ if __name__ == "__main__":
     mostrar_preview(canvas)
     robot = conectar_dobot()
     dibujar_con_dobot(robot, skeleton, grupos, puntos)
+
